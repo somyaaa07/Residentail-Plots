@@ -1196,7 +1196,7 @@ function Footer() {
   const bp = useBreakpoint();
   const links = {
     "Project": ["Overview", "Plot Sizes", "Price List", "Gallery", "Amenities"],
-    "Company": ["About Anant Raj", "Careers", "Press"],
+    "Company": ["About ", "Careers", "Press"],
     "Legal": ["Privacy Policy", "Terms", "YEIDA Info"],
   };
 
@@ -1232,7 +1232,7 @@ function Footer() {
           ))}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1.5rem", flexWrap: "wrap", gap: ".5rem" }}>
-          <p style={{ fontFamily: "var(--sans)", fontSize: ".62rem", color: "rgba(255,255,255,0.2)", fontWeight: 400 }}>© 2025 Anant Raj Limited. All Rights Reserved.</p>
+          <p style={{ fontFamily: "var(--sans)", fontSize: ".62rem", color: "rgba(255,255,255,0.2)", fontWeight: 400 }}>© 2026 Residential plots. All Rights Reserved.</p>
           <p style={{ fontFamily: "var(--sans)", fontSize: ".62rem", color: "rgba(255,255,255,0.15)", fontWeight: 400 }}>YEIDA Reg. No. YEIDA/GN/2024/22D/001</p>
         </div>
       </div>
