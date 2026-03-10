@@ -1088,7 +1088,7 @@ function LocationSection() {
         <div style={{ display: "grid", gridTemplateColumns: bp.isMobile ? "1fr" : bp.isTablet ? "1fr" : "1.4fr 1fr", gap: 4, opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(18px)", transition: "opacity .8s ease, transform .8s ease" }}>
           {/* Map */}
           <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "var(--shadow-lg)", border: "2px solid var(--border)" }}>
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d56200.776018264376!2d77.4708287216797!3d28.311998100000004!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cc794f9451345%3A0x93102d4498257b2e!2sSector%2022D%20Yamuna%20Expressway%20Authority%20Flats!5e0!3m2!1sen!2sin!4v1773143022792!5m2!1sen!2sin" width="100%" height={bp.isXs ? 220 : bp.isMobile ? 280 : 440} style={{ display: "block", border: "none" }} loading="lazy" title="Location" />
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d112078.60!2d77.5600!3d28.3200!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce8b900000001%3A0x1!2sSector+22D+Yamuna+Expressway+Greater+Noida!5e0!3m2!1sen!2sin!4v1" width="100%" height={bp.isXs ? 220 : bp.isMobile ? 280 : 440} style={{ display: "block", border: "none" }} loading="lazy" title="Location" />
             <div style={{ background: "#111111", padding: bp.isXs ? "0.875rem 1rem" : "0.875rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                 <div style={{ width: 7, height: 7, background: "#ba2429", borderRadius: "50%", boxShadow: "0 0 8px rgba(186,36,41,0.8)", animation: "pulse-ring 2s infinite", flexShrink: 0 }} />
@@ -1215,8 +1215,8 @@ function Footer() {
           ))}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1.25rem", flexWrap: "wrap", gap: ".5rem" }}>
-          <p style={{ fontFamily: "var(--sans)", fontSize: ".58rem", color: "rgba(255,255,255,0.18)", fontWeight: 400 }}>© 2024 Ace Estate Residential Plots. All Rights Reserved.</p>
-          <p style={{ fontFamily: "var(--sans)", fontSize: ".58rem", color: "rgba(255,255,255,0.14)", fontWeight: 400 }}>RERA Reg. No.  UPRERAPRJ442226/10/2024</p>
+          <p style={{ fontFamily: "var(--sans)", fontSize: ".58rem", color: "rgba(255,255,255,0.18)", fontWeight: 400 }}>© 2026 Ace Estate Residential Plots. All Rights Reserved.</p>
+          <p style={{ fontFamily: "var(--sans)", fontSize: ".58rem", color: "rgba(255,255,255,0.14)", fontWeight: 400 }}>RERA Reg. No. UPRERAPRJ442226</p>
         </div>
       </div>
     </footer>
@@ -1230,7 +1230,7 @@ function Disclaimer() {
       <div style={{ maxWidth: 1400, margin: "0 auto" }}>
         <p style={{ fontFamily: "var(--sans)", fontSize: ".6rem", fontWeight: 400, color: "rgba(255,255,255,0.16)", lineHeight: 1.9, marginBottom: ".6rem" }}>
           <strong style={{ color: "rgba(255,255,255,0.28)", fontWeight: 600 }}>Legal Disclaimer: </strong>
-          This website is for informational purposes only and does not constitute an offer or inducement to invest. All content including images, plot dimensions, pricing, and amenities are tentative and indicative. Prices starting from ₹1 Lakh per Gaj are subject to location premium, GST, stamp duty (min 6%), and registration charges (1%). RERA Reg. No.  UPRERAPRJ442226/10/2024.
+          This website is for informational purposes only and does not constitute an offer or inducement to invest. All content including images, plot dimensions, pricing, and amenities are tentative and indicative. Prices starting from ₹1 Lakh per Gaj are subject to location premium, GST, stamp duty (min 6%), and registration charges (1%). RERA Reg. No. UPRERAPRJ442226.
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
           {["Privacy Policy", "Terms of Use", "Cookie Policy", "YEIDA Details", "RERA Details"].map(link => (
@@ -1402,6 +1402,300 @@ function Sidebar({ onEnquire }) {
 }
 
 /* ══════════════════════════════════════════════════════
+   SITE MAP SECTION
+══════════════════════════════════════════════════════ */
+function SiteMapSection({ onEnquire }) {
+  const bp = useBreakpoint();
+  const [hovered, setHovered] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const ref = useRef(null);
+  const [vis, setVis] = useState(false);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold: 0.06 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const isRevealed = hovered || touched;
+
+  const highlights = [
+    { icon: "🛣️", label: "Wide Internal Roads", desc: "9m to 24m asphalted roads with pedestrian walkways" },
+    { icon: "🌳", label: "Central Green Park", desc: "Landscaped central park at the heart of the township" },
+    { icon: "🏊", label: "Clubhouse & Pool", desc: "Dedicated recreation zone with clubhouse and amenities" },
+    { icon: "🔒", label: "Gated Perimeter", desc: "Fully secured boundary with boom-barrier entry/exit" },
+    { icon: "💡", label: "Underground Utilities", desc: "All services laid underground for a clean streetscape" },
+    { icon: "🏡", label: "365 Exclusive Plots", desc: "Plotted layouts from 150–500 sq.yd across 68 acres" },
+  ];
+
+  const zones = [
+    { label: "Residential Zone A", color: "#ba2429", plots: "120 Plots · 150–200 sq.yd" },
+    { label: "Residential Zone B", color: "#c94040", plots: "95 Plots · 200–300 sq.yd" },
+    { label: "Premium Zone", color: "#111111", plots: "80 Plots · 300–500 sq.yd" },
+    { label: "Amenity Zone", color: "#555555", plots: "Clubhouse · Pool · Park" },
+    { label: "Green Buffer", color: "#7a9e7e", plots: "80% Open Landscape" },
+    { label: "Entry / Roads", color: "#aaaaaa", plots: "9m–24m Wide Roads" },
+  ];
+
+  return (
+    <section
+      id="sitemap"
+      ref={ref}
+      style={{ padding: `${vPad(bp)} 0`, background: "#fff", overflow: "hidden" }}
+    >
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: `0 ${hPad(bp)}` }}>
+
+        {/* Section header */}
+        <Reveal>
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            borderTop: "2px solid #111111", borderBottom: "1px solid var(--border)",
+            padding: "0.625rem 0", marginBottom: bp.isMobile ? "2rem" : "3rem",
+            flexWrap: "wrap", gap: "0.5rem"
+          }}>
+            <Eyebrow label="Our Site Map" />
+            <span style={{ fontFamily: "var(--sans)", fontSize: ".58rem", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--text-dim)", fontWeight: 500 }}>
+              68 Acres · Sector 22D · Yamuna Expressway
+            </span>
+          </div>
+        </Reveal>
+
+        {/* Main two-column layout */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: bp.isDesktop ? "1fr 1.15fr" : "1fr",
+          gap: bp.isDesktop ? "4rem" : "2.5rem",
+          alignItems: "center",
+          opacity: vis ? 1 : 0,
+          transform: vis ? "none" : "translateY(28px)",
+          transition: "opacity .9s ease, transform .9s ease",
+        }}>
+
+          {/* ── LEFT: Text Content ── */}
+          <div style={{ order: bp.isDesktop ? 1 : 2 }}>
+            <h2 style={{
+              fontFamily: "var(--serif)",
+              fontSize: bp.isXs ? "1.75rem" : bp.isMobile ? "2.1rem" : "clamp(2.2rem,3.5vw,3.4rem)",
+              fontWeight: 600, color: "#111111", lineHeight: 1.06,
+              marginBottom: "1.25rem",
+            }}>
+              Thoughtfully<br />Planned. Every<br />
+              <span style={{ color: "#ba2429" }}>Plot Perfected.</span>
+            </h2>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "1.5rem" }}>
+              <div style={{ width: 36, height: 2, background: "#ba2429", borderRadius: 1 }} />
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ba2429", opacity: 0.5 }} />
+              <div style={{ width: 18, height: 2, background: "#ba2429", borderRadius: 1, opacity: 0.35 }} />
+            </div>
+
+            <p style={{
+              fontFamily: "var(--sans)",
+              fontSize: bp.isXs ? ".78rem" : ".84rem",
+              color: "var(--text-muted)", lineHeight: 1.9,
+              marginBottom: "1.75rem",
+            }}>
+              The Ace Estate master plan is engineered for livability — wide roads, open greens, a central clubhouse, and a clear separation between residential, amenity, and buffer zones. Every plot enjoys direct road access and is within walking distance of community facilities.
+            </p>
+
+      
+
+            {/* Legend */}
+            <div style={{
+              background: "#f8f8f8",
+              border: "1.5px solid rgba(17,17,17,0.08)",
+              borderRadius: 8,
+              padding: bp.isXs ? "1rem" : "1.25rem",
+              marginBottom: "1.75rem",
+            }}>
+              <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", letterSpacing: ".2em", textTransform: "uppercase", color: "#ba2429", fontWeight: 700, marginBottom: ".875rem" }}>Zone Legend</div>
+              <div style={{ display: "grid", gridTemplateColumns: bp.isXs ? "1fr" : "1fr 1fr", gap: ".5rem" }}>
+                {zones.map((z, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: z.color, flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: "var(--sans)", fontSize: ".6rem", fontWeight: 600, color: "#111111", lineHeight: 1.2 }}>{z.label}</div>
+                      <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", color: "var(--text-dim)", lineHeight: 1.3 }}>{z.plots}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <GreenBtn onClick={onEnquire} small>Download Site Plan →</GreenBtn>
+          </div>
+
+          {/* ── RIGHT: Blurred Image with Hover Reveal ── */}
+          <div style={{ order: bp.isDesktop ? 2 : 1, position: "relative" }}>
+
+            {/* Hover instruction badge */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 7,
+              marginBottom: "0.875rem",
+              opacity: isRevealed ? 0 : 1,
+              transition: "opacity .4s ease",
+              justifyContent: bp.isDesktop ? "flex-end" : "flex-start",
+            }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                background: "#fdf0f0",
+                border: "1.5px solid rgba(186,36,41,0.25)",
+                borderRadius: 20, padding: "5px 13px",
+              }}>
+                <div style={{
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: "#ba2429",
+                  boxShadow: "0 0 0 3px rgba(186,36,41,0.2)",
+                  animation: "pulse-ring 2s infinite",
+                  flexShrink: 0,
+                }} />
+                <span style={{ fontFamily: "var(--sans)", fontSize: ".55rem", fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#ba2429" }}>
+                  {bp.isMobile ? "Tap to reveal site plan" : "Hover to reveal site plan"}
+                </span>
+              </div>
+            </div>
+
+            {/* Image container */}
+            <div
+              onMouseEnter={() => setHovered(true)}
+              onMouseLeave={() => setHovered(false)}
+              onTouchStart={() => setTouched(v => !v)}
+              style={{
+                position: "relative",
+                borderRadius: 10,
+                overflow: "hidden",
+                cursor: "pointer",
+             
+                transition: "box-shadow .6s ease",
+                // border: `2px solid ${isRevealed ? "rgba(186,36,41,0.35)" : "rgba(17,17,17,0.1)"}`,
+              }}
+            >
+              {/* The actual site map image */}
+              <img
+                src="/sitemap.jpeg"
+                alt="Ace Estate Site Map"
+                style={{
+                  width: "100%",
+                  display: "block",
+                  filter: isRevealed ? "blur(0px) brightness(1)" : "blur(14px) brightness(0.7)",
+                  transform: isRevealed ? "scale(1)" : "scale(1.06)",
+                  transition: "filter .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1)",
+                  minHeight: bp.isXs ? 280 : bp.isMobile ? 320 : 480,
+                  objectFit: "cover",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                }}
+              />
+
+              {/* Blur overlay — fades out on hover */}
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "rgba(17,17,17,0.45)",
+                backdropFilter: isRevealed ? "blur(0px)" : "blur(0px)",
+                opacity: isRevealed ? 0 : 1,
+                transition: "opacity .6s ease",
+                pointerEvents: "none",
+              }} />
+
+              {/* Centered "locked" icon — visible when blurred */}
+              <div style={{
+                position: "absolute", inset: 0,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                gap: 12,
+                opacity: isRevealed ? 0 : 1,
+                transform: isRevealed ? "scale(0.85)" : "scale(1)",
+                transition: "opacity .45s ease, transform .45s ease",
+                pointerEvents: "none",
+              }}>
+                
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? ".9rem" : "1.1rem", fontWeight: 600, color: "#fff", marginBottom: 4 }}>Site Plan</div>
+                  <div style={{ fontFamily: "var(--sans)", fontSize: bp.isXs ? ".56rem" : ".62rem", color: "rgba(255,255,255,0.65)", letterSpacing: ".1em", textTransform: "uppercase", fontWeight: 500 }}>
+                    {bp.isMobile ? "Tap to view" : "Hover to view"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Revealed overlay — label shown when image is visible */}
+              <div style={{
+                position: "absolute", bottom: 0, left: 0, right: 0,
+                padding: bp.isXs ? "1rem 1.25rem" : "1.5rem 1.75rem",
+                background: "linear-gradient(to top, rgba(17,17,17,0.88) 0%, transparent 100%)",
+                opacity: isRevealed ? 1 : 0,
+                transform: isRevealed ? "translateY(0)" : "translateY(10px)",
+                transition: "opacity .5s .1s ease, transform .5s .1s ease",
+                pointerEvents: "none",
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                  <div>
+                    <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", fontWeight: 600, marginBottom: 4 }}>Master Layout</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? "1rem" : "1.2rem", fontWeight: 600, color: "#fff" }}>Ace Estate — Sector 22D</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {["68 Acres", "365 Plots", "YEIDA Approved"].map(t => (
+                      <span key={t} style={{
+                        fontFamily: "var(--sans)", fontSize: ".48rem", fontWeight: 600,
+                        letterSpacing: ".07em", textTransform: "uppercase",
+                        padding: "4px 9px", borderRadius: 3,
+                        background: "rgba(186,36,41,0.75)",
+                        color: "#fff",
+                      }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Corner accent — top-right */}
+              <div style={{
+                position: "absolute", top: 14, right: 14,
+                background: isRevealed ? "rgba(255,250,250,0.93)" : "rgba(255,255,255,0.12)",
+                backdropFilter: "blur(10px)",
+                border: `1.5px solid ${isRevealed ? "rgba(186,36,41,0.3)" : "rgba(255,255,255,0.2)"}`,
+                borderRadius: 6, padding: "6px 11px",
+                transition: "all .5s ease",
+                pointerEvents: "none",
+              }}>
+                <div style={{ fontFamily: "var(--sans)", fontSize: ".46rem", letterSpacing: ".16em", textTransform: "uppercase", color: isRevealed ? "var(--text-dim)" : "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: 2 }}>Total Area</div>
+                <div style={{ fontFamily: "var(--display)", fontStyle: "italic", fontSize: "1.2rem", fontWeight: 700, color: isRevealed ? "#ba2429" : "#fff", lineHeight: 1 }}>68 Acres</div>
+              </div>
+            </div>
+
+            {/* Below image — stat strip */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 3,
+              marginTop: 3,
+              opacity: vis ? 1 : 0,
+              transition: "opacity .7s .3s ease",
+            }}>
+              {[
+                { val: "365", label: "Total Plots" },
+                { val: "80%", label: "Open Space" },
+                { val: "24m", label: "Max Road Width" },
+              ].map((s, i) => (
+                <div key={i} style={{
+                  background: i === 0 ? "#111111" : i === 1 ? "#fdf0f0" : "#f0f0f0",
+                  border: "1.5px solid var(--border)",
+                  borderRadius: 6,
+                  padding: bp.isXs ? ".875rem" : "1rem 1.25rem",
+                  textAlign: "center",
+                }}>
+                  <div style={{ fontFamily: "var(--display)", fontStyle: "italic", fontSize: bp.isXs ? "1.4rem" : "1.7rem", fontWeight: 700, color: i === 0 ? "#fff" : "#ba2429", lineHeight: 1, marginBottom: 3 }}>{s.val}</div>
+                  <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", color: i === 0 ? "rgba(255,255,255,0.55)" : "var(--text-dim)" }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
    APP ROOT
 ══════════════════════════════════════════════════════ */
 export default function App() {
@@ -1437,6 +1731,7 @@ export default function App() {
           <FloorPlanSection onEnquire={openModal} />
           <LocationAdvantageSection onEnquire={openModal} />
           <LocationSection />
+          <SiteMapSection onEnquire={openModal} />
           <ContactSection onEnquire={openModal} />
         </div>
         {bp.isWide && <Sidebar onEnquire={openModal} />}
