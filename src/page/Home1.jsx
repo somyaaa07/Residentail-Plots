@@ -1354,8 +1354,28 @@ function StickyBottomCTA({ onEnquire }) {
 ══════════════════════════════════════════════════════ */
 function Sidebar({ onEnquire }) {
   const bp = useBreakpoint();
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", h, { passive: true });
+    return () => window.removeEventListener("scroll", h);
+  }, []);
+
+  const navH = scrolled ? 64 : 84;
+
   return (
-    <div style={{ position: "sticky", top: 76, padding: "1.75rem 1.5rem", background: "#fff", borderLeft: "2px solid var(--border)", height: "calc(100vh - 76px)", overflowY: "auto" }}>
+    <div style={{
+      position: "sticky",
+      top: navH,
+      maxHeight: `calc(100vh - ${navH}px)`,
+      overflowY: "auto",
+      padding: "1.75rem 1.5rem",
+      background: "#fff",
+      borderLeft: "2px solid var(--border)",
+      transition: "top .4s ease, max-height .4s ease",
+      scrollbarWidth: "thin",
+      scrollbarColor: "var(--navy-light) transparent",
+    }}>
       <div style={{ borderBottom: "2px solid var(--border)", paddingBottom: "1.25rem", marginBottom: "1.25rem" }}>
         <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", letterSpacing: ".18em", textTransform: "uppercase", color: "var(--green)", fontWeight: 700, marginBottom: ".4rem" }}>Plot Sizes</div>
         <div style={{ fontFamily: "var(--serif)", fontSize: "1.2rem", fontWeight: 600, color: "var(--navy)", lineHeight: 1.2 }}>150 – 500 sq.yd</div>
@@ -1401,17 +1421,18 @@ export default function App() {
   const openModal = () => setModal(true);
 
   return (
-    <div style={{ maxWidth: "100vw", overflowX: "hidden" }}>
+    <div style={{ maxWidth: "100vw", /* NO overflowX:hidden here — it breaks position:sticky on sidebar */ }}>
       <style>{GLOBAL_CSS}</style>
       <Navbar onEnquire={openModal} />
       <Hero onEnquire={openModal} />
 
-      {/* Main layout: content + optional sidebar on wide screens */}
+      {/* alignItems:"start" is REQUIRED for position:sticky on the sidebar child */}
       <div style={{
         display: "grid",
         gridTemplateColumns: bp.isWide ? "1fr 288px" : "1fr",
         alignItems: "start",
         maxWidth: "100%",
+        position: "relative",
       }}>
         <div style={{ minWidth: 0 }}>
           <StorySection />
