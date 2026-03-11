@@ -29,6 +29,45 @@ function useBreakpoint() {
   };
 }
 
+/* ─── Lead Form Hook ─────────────────────────────────────────────────────── */
+function useLeadForm(source = "unknown") {
+  const [fields, setFields] = useState({ name: "", phone: "", email: "" });
+  const [status, setStatus] = useState("idle");
+
+  const set = (key) => (e) => setFields((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const submit = async () => {
+    if (!fields.name || !fields.phone) return;
+    setStatus("loading");
+    try {
+      await fetch("https://aceresidential-plots.deboxtechnology.com/contact.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...fields, source, timestamp: new Date().toISOString() }),
+      });
+      setStatus("success");
+      setFields({ name: "", phone: "", email: "" });
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  const reset = () => { setStatus("idle"); setFields({ name: "", phone: "", email: "" }); };
+
+  return { fields, set, submit, status, reset };
+}
+
+/* ─── Success Message ────────────────────────────────────────────────────── */
+function SuccessMsg() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "1.5rem", textAlign: "center" }}>
+      <div style={{ width: 36, height: 36, border: "2px solid #ba2429", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#ba2429", fontSize: "1.1rem" }}>✓</div>
+      <div style={{ fontFamily: "var(--serif)", fontSize: "1.1rem", color: "#111111" }}>Thank You!</div>
+      <div style={{ fontFamily: "var(--sans)", fontSize: ".68rem", fontWeight: 300, color: "var(--text-dim)", lineHeight: 1.7 }}>We'll reach out within 24 hours with exclusive details.</div>
+    </div>
+  );
+}
+
 const GLOBAL_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -78,34 +117,28 @@ input { caret-color: var(--navy); }
 @keyframes amenitySlide { from { opacity:0; transform: translateX(-12px); } to { opacity:1; transform:translateX(0); } }
 @keyframes counterSpin { from { transform: rotateY(90deg); opacity:0; } to { transform: rotateY(0deg); opacity:1; } }
 
-/* ── RESPONSIVE UTILITIES ── */
 img { max-width: 100%; height: auto; }
 input, button, select, textarea { font-family: inherit; }
 
-/* Tap target fix */
 @media (max-width: 639px) {
   input, button, a { -webkit-tap-highlight-color: transparent; }
   button { touch-action: manipulation; }
   h1, h2, h3, h4, p, span, div { word-break: break-word; overflow-wrap: break-word; }
 }
 
-/* Landscape phones */
 @media (max-width: 896px) and (orientation: landscape) {
   .hero-section { min-height: 100vw !important; }
 }
 
-/* Safe areas (notch devices) */
 @supports (padding: max(0px)) {
   .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
   .sticky-bar { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
 }
 
-/* Fluid font scaling */
 @media (max-width: 360px) {
   html { font-size: 14px; }
 }
 
-/* Touch device hover fix */
 @media (hover: none) {
   .hover-lift:hover { transform: none !important; box-shadow: var(--shadow-sm) !important; }
 }
@@ -171,11 +204,12 @@ function Eyebrow({ label, light = false }) {
   );
 }
 
-function GreenBtn({ children, onClick, outline = false, small = false, fullWidth = false }) {
+function GreenBtn({ children, onClick, outline = false, small = false, fullWidth = false, disabled = false }) {
   const [hov, setHov] = useState(false);
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
@@ -186,12 +220,13 @@ function GreenBtn({ children, onClick, outline = false, small = false, fullWidth
         fontSize: small ? "0.6rem" : "0.65rem",
         letterSpacing: "0.14em", textTransform: "uppercase",
         padding: small ? "10px 20px" : "12px 26px",
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
         borderRadius: 4,
         width: fullWidth ? "100%" : "auto",
         transition: "all .22s ease",
         boxShadow: !outline && hov ? "0 6px 20px rgba(186,36,41,0.4)" : "none",
         whiteSpace: "nowrap",
+        opacity: disabled ? 0.7 : 1,
       }}>
       {children}
     </button>
@@ -243,7 +278,6 @@ function Navbar({ onEnquire }) {
           transition: "height .4s ease",
           gap: 12,
         }}>
-          {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
             <img
               src="/logo.svg"
@@ -253,7 +287,6 @@ function Navbar({ onEnquire }) {
             />
           </div>
 
-          {/* Desktop links */}
           {bp.isDesktop && (
             <div style={{ display: "flex", gap: bp.isLg ? "1.5rem" : "2.25rem", alignItems: "center" }}>
               {links.map(l => (
@@ -270,7 +303,6 @@ function Navbar({ onEnquire }) {
             </div>
           )}
 
-          {/* Right actions */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
             {bp.isDesktop && <GreenBtn onClick={onEnquire} small>Enquire Now</GreenBtn>}
             {!bp.isDesktop && (
@@ -291,8 +323,7 @@ function Navbar({ onEnquire }) {
                 <div style={{ width: 16, height: 16, position: "relative", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                   {[0, 1, 2].map(idx => (
                     <span key={idx} style={{
-                      position: "absolute",
-                      left: 0,
+                      position: "absolute", left: 0,
                       width: idx === 1 ? (open ? 0 : "75%") : "100%",
                       height: 2, borderRadius: 2, background: "#fff",
                       top: idx === 0 ? (open ? "50%" : "20%") : idx === 1 ? "50%" : (open ? "50%" : "80%"),
@@ -311,7 +342,6 @@ function Navbar({ onEnquire }) {
         </div>
       </nav>
 
-      {/* Mobile drawer */}
       {!bp.isDesktop && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 99,
@@ -355,6 +385,8 @@ function Navbar({ onEnquire }) {
 function Hero({ onEnquire }) {
   const bp = useBreakpoint();
   const [slide, setSlide] = useState(0);
+  const heroForm = useLeadForm("hero");
+
   const slides = [
     "https://images.pexels.com/photos/1438832/pexels-photo-1438832.jpeg",
     "https://images.pexels.com/photos/7031607/pexels-photo-7031607.jpeg",
@@ -378,7 +410,6 @@ function Hero({ onEnquire }) {
       ))}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.18) 100%)" }} />
 
-      {/* Slide dots */}
       <div style={{ position: "absolute", bottom: bp.isXs ? "1.25rem" : "1.75rem", left: "50%", transform: "translateX(-50%)", display: "flex", gap: 8, zIndex: 5 }}>
         {[0, 1, 2].map(i => (
           <button key={i} onClick={() => setSlide(i)}
@@ -394,7 +425,6 @@ function Hero({ onEnquire }) {
         textAlign: "center", zIndex: 2,
       }}>
         <div style={{ animation: "fadeUp 1.1s .2s both", width: "100%", maxWidth: 1100 }}>
-          {/* Badge */}
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             marginBottom: bp.isXs ? 10 : bp.isMobile ? 14 : 20,
@@ -431,34 +461,79 @@ function Hero({ onEnquire }) {
             Premium residential plots from 150 sq. yd. to 500 sq. yd. across 68 acres of green landscape. Freehold. YEIDA Approved. Just 15 min from Jewar Airport.
           </p>
 
-          {/* Enquiry form */}
+          {/* ── Hero Form ── */}
           <div style={{ maxWidth: bp.isXs ? "100%" : bp.isMobile ? 360 : 680, margin: "0 auto" }}>
-            {bp.isMobile ? (
+            {heroForm.status === "success" ? (
+              <div style={{ background: "rgba(255,255,255,0.96)", borderRadius: 8, overflow: "hidden" }}>
+                <SuccessMsg />
+              </div>
+            ) : bp.isMobile ? (
+              /* Mobile form */
               <div style={{ background: "rgba(255,255,255,0.96)", backdropFilter: "blur(20px)", borderRadius: 8, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-                  {[{ label: "Name", ph: "Full Name" }, { label: "Phone", ph: "+91 00000 00000" }].map((f, i) => (
-                    <div key={i} style={{ padding: "12px 14px", borderRight: i === 0 ? "1px solid var(--border)" : "none", borderBottom: "1px solid var(--border)" }}>
-                      <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", letterSpacing: ".18em", textTransform: "uppercase", color: "#ba2429", fontWeight: 600, marginBottom: 4 }}>{f.label}</div>
-                      <input placeholder={f.ph} style={{ background: "transparent", border: "none", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".78rem", width: "100%", fontWeight: 500 }} />
-                    </div>
-                  ))}
+                  <div style={{ padding: "12px 14px", borderRight: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
+                    <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", letterSpacing: ".18em", textTransform: "uppercase", color: "#ba2429", fontWeight: 600, marginBottom: 4 }}>Name</div>
+                    <input
+                      value={heroForm.fields.name}
+                      onChange={heroForm.set("name")}
+                      placeholder="Full Name"
+                      style={{ background: "transparent", border: "none", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".78rem", width: "100%", fontWeight: 500 }}
+                    />
+                  </div>
+                  <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)" }}>
+                    <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", letterSpacing: ".18em", textTransform: "uppercase", color: "#ba2429", fontWeight: 600, marginBottom: 4 }}>Phone</div>
+                    <input
+                      value={heroForm.fields.phone}
+                      onChange={heroForm.set("phone")}
+                      placeholder="+91 00000 00000"
+                      style={{ background: "transparent", border: "none", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".78rem", width: "100%", fontWeight: 500 }}
+                    />
+                  </div>
                 </div>
-                <button onClick={onEnquire} style={{ width: "100%", padding: "13px", background: "#ba2429", border: "none", color: "#fff", fontFamily: "var(--sans)", fontSize: ".62rem", fontWeight: 700, letterSpacing: ".16em", textTransform: "uppercase", cursor: "pointer" }}>
-                  Get Brochure & Price List
+                <button
+                  onClick={heroForm.submit}
+                  disabled={heroForm.status === "loading"}
+                  style={{ width: "100%", padding: "13px", background: "#ba2429", border: "none", color: "#fff", fontFamily: "var(--sans)", fontSize: ".62rem", fontWeight: 700, letterSpacing: ".16em", textTransform: "uppercase", cursor: "pointer", opacity: heroForm.status === "loading" ? 0.7 : 1 }}>
+                  {heroForm.status === "loading" ? "Registering…" : "Get Brochure & Price List"}
                 </button>
               </div>
             ) : (
+              /* Desktop form */
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", background: "rgba(255,255,255,0.96)", backdropFilter: "blur(20px)", borderRadius: 8, overflow: "hidden", boxShadow: "0 24px 60px rgba(0,0,0,0.3)" }}>
-                {[{ label: "Name", ph: "Full Name" }, { label: "Phone", ph: "+91 00000 00000" }, { label: "Email", ph: "you@email.com" }].map((f, i) => (
-                  <div key={i} style={{ padding: "13px 16px", borderRight: "1px solid var(--border)", minWidth: 0 }}>
-                    <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", letterSpacing: ".18em", textTransform: "uppercase", color: "#ba2429", fontWeight: 600, marginBottom: 4 }}>{f.label}</div>
-                    <input placeholder={f.ph} style={{ background: "transparent", border: "none", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".78rem", width: "100%", fontWeight: 500 }} />
-                  </div>
-                ))}
-                <button onClick={onEnquire} style={{ background: "#ba2429", border: "none", color: "#fff", fontFamily: "var(--sans)", fontSize: ".6rem", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", padding: "0 20px", cursor: "pointer", whiteSpace: "nowrap", transition: "background .2s" }}
+                <div style={{ padding: "13px 16px", borderRight: "1px solid var(--border)", minWidth: 0 }}>
+                  <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", letterSpacing: ".18em", textTransform: "uppercase", color: "#ba2429", fontWeight: 600, marginBottom: 4 }}>Name</div>
+                  <input
+                    value={heroForm.fields.name}
+                    onChange={heroForm.set("name")}
+                    placeholder="Full Name"
+                    style={{ background: "transparent", border: "none", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".78rem", width: "100%", fontWeight: 500 }}
+                  />
+                </div>
+                <div style={{ padding: "13px 16px", borderRight: "1px solid var(--border)", minWidth: 0 }}>
+                  <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", letterSpacing: ".18em", textTransform: "uppercase", color: "#ba2429", fontWeight: 600, marginBottom: 4 }}>Phone</div>
+                  <input
+                    value={heroForm.fields.phone}
+                    onChange={heroForm.set("phone")}
+                    placeholder="+91 00000 00000"
+                    style={{ background: "transparent", border: "none", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".78rem", width: "100%", fontWeight: 500 }}
+                  />
+                </div>
+                <div style={{ padding: "13px 16px", borderRight: "1px solid var(--border)", minWidth: 0 }}>
+                  <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", letterSpacing: ".18em", textTransform: "uppercase", color: "#ba2429", fontWeight: 600, marginBottom: 4 }}>Email</div>
+                  <input
+                    value={heroForm.fields.email}
+                    onChange={heroForm.set("email")}
+                    placeholder="you@email.com"
+                    style={{ background: "transparent", border: "none", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".78rem", width: "100%", fontWeight: 500 }}
+                  />
+                </div>
+                <button
+                  onClick={heroForm.submit}
+                  disabled={heroForm.status === "loading"}
+                  style={{ background: "#ba2429", border: "none", color: "#fff", fontFamily: "var(--sans)", fontSize: ".6rem", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", padding: "0 20px", cursor: "pointer", whiteSpace: "nowrap", transition: "background .2s", opacity: heroForm.status === "loading" ? 0.7 : 1 }}
                   onMouseEnter={e => e.currentTarget.style.background = "#8f1a1e"}
                   onMouseLeave={e => e.currentTarget.style.background = "#ba2429"}>
-                  Enquire →
+                  {heroForm.status === "loading" ? "…" : "Enquire →"}
                 </button>
               </div>
             )}
@@ -503,7 +578,6 @@ function StorySection() {
           gap: bp.isDesktop ? "4rem" : "2.5rem",
           alignItems: "start",
         }}>
-          {/* Image */}
           <div style={{ order: bp.isDesktop ? 1 : 2, position: "relative" }}>
             <div style={{
               width: "100%",
@@ -530,7 +604,6 @@ function StorySection() {
             </div>
           </div>
 
-          {/* Text */}
           <div style={{ order: bp.isDesktop ? 2 : 1 }}>
             <h2 style={{
               fontFamily: "var(--serif)",
@@ -587,7 +660,6 @@ function QuoteBanner() {
           gap: bp.isMobile ? "2.5rem" : "5rem",
           alignItems: "center"
         }}>
-          {/* Quote */}
           <div style={{ opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(20px)", transition: "opacity 1s ease, transform 1s ease", position: "relative" }}>
             <div style={{ position: "absolute", top: -16, left: -8, fontFamily: "var(--display)", fontSize: bp.isXs ? "7rem" : "10rem", lineHeight: 1, color: "#f0f0f0", fontWeight: 600, pointerEvents: "none", userSelect: "none", zIndex: 0 }}>"</div>
             <div style={{ position: "relative", zIndex: 1 }}>
@@ -609,7 +681,6 @@ function QuoteBanner() {
             </div>
           </div>
 
-          {/* Stats grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, opacity: vis ? 1 : 0, transition: "opacity .8s .2s ease" }}>
             {stats.map((s, i) => (
               <div key={i} style={{
@@ -699,7 +770,7 @@ function GallerySection({ onEnquire }) {
             <div key={i} style={{ gridColumn: img.col, gridRow: img.row, position: "relative", overflow: "hidden", cursor: "pointer" }}
               onMouseEnter={() => setHov(i)} onMouseLeave={() => setHov(null)}>
               <img src={img.src} alt={img.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform .7s cubic-bezier(.16,1,.3,1)", transform: hov === i ? "scale(1.07)" : "scale(1)" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)", transition: "background .4s ease" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)" }} />
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: bp.isXs ? "10px 12px" : "13px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                 <span style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? ".78rem" : ".95rem", fontWeight: 500, color: "#fff", textShadow: "0 1px 6px rgba(0,0,0,0.5)", lineHeight: 1.2, flexShrink: 1, minWidth: 0 }}>{img.label}</span>
                 <button onClick={e => { e.stopPropagation(); onEnquire(); }} style={{ fontFamily: "var(--sans)", fontSize: bp.isXs ? ".5rem" : ".58rem", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#fff", background: "rgba(186,36,41,0.75)", backdropFilter: "blur(10px)", border: "1.5px solid rgba(255,255,255,0.55)", padding: bp.isXs ? "4px 9px" : "6px 12px", borderRadius: 4, cursor: "pointer", transition: "all .25s ease", whiteSpace: "nowrap", flexShrink: 0 }}>Enquire →</button>
@@ -768,28 +839,15 @@ function AmenitiesSection() {
           </div>
         </Reveal>
 
-        {/* Tabs */}
-        <div style={{
-          display: "grid", gridTemplateColumns: `repeat(${categories.length}, 1fr)`, gap: 3,
-          marginBottom: bp.isMobile ? "1.25rem" : "2rem",
-          opacity: vis ? 1 : 0, transition: "opacity .7s ease",
-        }}>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${categories.length}, 1fr)`, gap: 3, marginBottom: bp.isMobile ? "1.25rem" : "2rem", opacity: vis ? 1 : 0, transition: "opacity .7s ease" }}>
           {categories.map((c, i) => (
             <button key={i} onClick={() => setActiveTab(i)}
-              style={{
-                background: activeTab === i ? cat.color : "#fff",
-                border: `2px solid ${activeTab === i ? cat.color : "var(--border)"}`,
-                borderRadius: 5, padding: bp.isXs ? "8px 4px" : "12px 8px",
-                cursor: "pointer", transition: "all .3s ease",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                minHeight: 40,
-              }}>
+              style={{ background: activeTab === i ? cat.color : "#fff", border: `2px solid ${activeTab === i ? cat.color : "var(--border)"}`, borderRadius: 5, padding: bp.isXs ? "8px 4px" : "12px 8px", cursor: "pointer", transition: "all .3s ease", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minHeight: 40 }}>
               <span style={{ fontFamily: "var(--sans)", fontSize: bp.isXs ? ".48rem" : ".58rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: activeTab === i ? "#fff" : "var(--text-muted)", transition: "color .3s", lineHeight: 1.3, textAlign: "center" }}>{c.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Cards */}
         <div style={{ display: "grid", gridTemplateColumns: bp.isXs ? "1fr" : bp.isMobile ? "1fr" : bp.isTablet ? "1fr 1fr" : "1fr 1fr 1fr", gap: 4, opacity: vis ? 1 : 0, transition: "opacity .6s .1s ease" }}>
           {cat.items.map((item, i) => (
             <div key={`${activeTab}-${i}`}
@@ -862,7 +920,6 @@ function FloorPlanSection({ onEnquire }) {
           </div>
         </Reveal>
 
-        {/* Plot size tabs */}
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${plots.length}, 1fr)`, gap: 3, marginBottom: 3 }}>
           {plots.map((pl, i) => (
             <button key={i} onClick={() => setActive(i)} onMouseEnter={() => setHov(i)} onMouseLeave={() => setHov(null)}
@@ -873,9 +930,7 @@ function FloorPlanSection({ onEnquire }) {
           ))}
         </div>
 
-        {/* Detail card */}
         <div style={{ display: "grid", gridTemplateColumns: bp.isMobile ? "1fr" : "1fr 1.35fr", gap: 3, borderRadius: 8, overflow: "hidden", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(20px)", transition: "opacity .8s ease, transform .8s ease", boxShadow: "0 16px 50px rgba(0,0,0,0.12)" }}>
-          {/* Left info panel */}
           <div style={{ background: "#fffafa", padding: bp.isXs ? "1.5rem" : "2.25rem", borderRight: bp.isMobile ? "none" : "2px solid rgba(17,17,17,0.08)" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: "1.25rem", background: `${p.tagColor}18`, border: `1.5px solid ${p.tagColor}44`, borderRadius: 20, padding: "5px 12px" }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: p.tagColor, flexShrink: 0 }} />
@@ -907,7 +962,6 @@ function FloorPlanSection({ onEnquire }) {
               <GreenBtn onClick={onEnquire} small>Enquire for Price</GreenBtn>
             </div>
           </div>
-          {/* Image */}
           <div style={{ position: "relative", minHeight: bp.isMobile ? 220 : 0, overflow: "hidden" }}>
             {plots.map((pl, i) => (
               <div key={i} style={{ position: "absolute", inset: 0, opacity: active === i ? 1 : 0, transition: "opacity .7s ease" }}>
@@ -985,12 +1039,7 @@ function LocationAdvantageSection({ onEnquire }) {
             <div key={adv.id}
               onMouseEnter={() => setHovCard(i)}
               onMouseLeave={() => setHovCard(null)}
-              style={{
-                position: "relative", borderRadius: 8, overflow: "hidden", cursor: "pointer",
-                opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(28px)",
-                transition: `opacity .7s ${i * 0.1}s ease, transform .7s ${i * 0.1}s ease, box-shadow .3s ease`,
-                boxShadow: hovCard === i ? "0 20px 50px rgba(0,0,0,0.5)" : "0 6px 20px rgba(0,0,0,0.3)",
-              }}>
+              style={{ position: "relative", borderRadius: 8, overflow: "hidden", cursor: "pointer", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(28px)", transition: `opacity .7s ${i * 0.1}s ease, transform .7s ${i * 0.1}s ease, box-shadow .3s ease`, boxShadow: hovCard === i ? "0 20px 50px rgba(0,0,0,0.5)" : "0 6px 20px rgba(0,0,0,0.3)" }}>
               <div style={{ position: "absolute", inset: 0 }}>
                 <img src={adv.img} alt={adv.title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .7s ease", transform: hovCard === i ? "scale(1.07)" : "scale(1)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(4,4,4,0.97) 0%, rgba(4,4,4,0.72) 50%, rgba(4,4,4,0.28) 100%)" }} />
@@ -1014,12 +1063,7 @@ function LocationAdvantageSection({ onEnquire }) {
         </div>
 
         <Reveal delay={0.3}>
-          <div style={{
-            marginTop: "2.5rem",
-            background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 8,
-            padding: bp.isXs ? "1.5rem 1.25rem" : bp.isMobile ? "1.5rem" : "1.5rem 2.25rem",
-            display: "flex", flexDirection: bp.isMobile ? "column" : "row", alignItems: bp.isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: "1.25rem",
-          }}>
+          <div style={{ marginTop: "2.5rem", background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: bp.isXs ? "1.5rem 1.25rem" : bp.isMobile ? "1.5rem" : "1.5rem 2.25rem", display: "flex", flexDirection: bp.isMobile ? "column" : "row", alignItems: bp.isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: "1.25rem" }}>
             <div>
               <div style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? "1rem" : "1.3rem", fontWeight: 600, color: "#fff", marginBottom: ".25rem" }}>Own land at the centre of it all.</div>
               <div style={{ fontFamily: "var(--sans)", fontSize: bp.isXs ? ".62rem" : ".72rem", color: "rgba(255,255,255,0.4)" }}>Starting ₹1 Lakh/Gaj · Sector 22D, Yamuna Expressway · Only 365 Plots</div>
@@ -1086,7 +1130,6 @@ function LocationSection() {
         </Reveal>
 
         <div style={{ display: "grid", gridTemplateColumns: bp.isMobile ? "1fr" : bp.isTablet ? "1fr" : "1.4fr 1fr", gap: 4, opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(18px)", transition: "opacity .8s ease, transform .8s ease" }}>
-          {/* Map */}
           <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "var(--shadow-lg)", border: "2px solid var(--border)" }}>
             <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d112078.60!2d77.5600!3d28.3200!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce8b900000001%3A0x1!2sSector+22D+Yamuna+Expressway+Greater+Noida!5e0!3m2!1sen!2sin!4v1" width="100%" height={bp.isXs ? 220 : bp.isMobile ? 280 : 440} style={{ display: "block", border: "none" }} loading="lazy" title="Location" />
             <div style={{ background: "#111111", padding: bp.isXs ? "0.875rem 1rem" : "0.875rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
@@ -1098,7 +1141,6 @@ function LocationSection() {
             </div>
           </div>
 
-          {/* Landmarks panel */}
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ display: "grid", gridTemplateColumns: `repeat(${landmarkGroups.length}, 1fr)`, gap: 3 }}>
               {landmarkGroups.map((g, i) => (
@@ -1147,13 +1189,16 @@ function LocationSection() {
 ══════════════════════════════════════════════════════ */
 function ContactSection() {
   const bp = useBreakpoint();
+  const contactForm = useLeadForm("contact-section");
+
   return (
     <section style={{ background: "var(--off-white)", borderTop: "2px solid var(--border)" }}>
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: `${vPad(bp)} ${hPad(bp)}` }}>
         <Reveal>
           <Eyebrow label="Visit Us" />
           <h2 style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? "1.6rem" : "clamp(1.8rem,4vw,3rem)", fontWeight: 600, color: "#111111", marginBottom: "2rem", lineHeight: 1.1 }}>Walk the Land That Will Become Your Legacy</h2>
-          <div style={{ display: "grid", gridTemplateColumns: bp.isXs ? "1fr" : bp.isMobile ? "1fr" : bp.isTablet ? "1fr 1fr" : "repeat(3, 1fr)", gap: bp.isMobile ? "1rem" : "1.5rem" }}>
+
+          <div style={{ display: "grid", gridTemplateColumns: bp.isXs ? "1fr" : bp.isMobile ? "1fr" : bp.isTablet ? "1fr 1fr" : "repeat(3, 1fr)", gap: bp.isMobile ? "1rem" : "1.5rem", marginBottom: "2.5rem" }}>
             {[
               { icon: "📍", title: "Site Address", lines: ["Plot TS-01B, Sector 22D", "Yamuna Expressway, Greater Noida — 201308"] },
               { icon: "📞", title: "Sales Enquiries", lines: ["+91 9205974843"] },
@@ -1168,7 +1213,132 @@ function ContactSection() {
               </div>
             ))}
           </div>
+
+       
         </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   SITE MAP SECTION
+══════════════════════════════════════════════════════ */
+function SiteMapSection({ onEnquire }) {
+  const bp = useBreakpoint();
+  const [hovered, setHovered] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const ref = useRef(null);
+  const [vis, setVis] = useState(false);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold: 0.06 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const isRevealed = hovered || touched;
+
+  const zones = [
+    { label: "Residential Zone A", color: "#ba2429", plots: "120 Plots · 150–200 sq.yd" },
+    { label: "Residential Zone B", color: "#c94040", plots: "95 Plots · 200–300 sq.yd" },
+    { label: "Premium Zone", color: "#111111", plots: "80 Plots · 300–500 sq.yd" },
+    { label: "Amenity Zone", color: "#555555", plots: "Clubhouse · Pool · Park" },
+    { label: "Green Buffer", color: "#7a9e7e", plots: "80% Open Landscape" },
+    { label: "Entry / Roads", color: "#aaaaaa", plots: "9m–24m Wide Roads" },
+  ];
+
+  return (
+    <section id="sitemap" ref={ref} style={{ padding: `${vPad(bp)} 0`, background: "#fff", overflow: "hidden" }}>
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: `0 ${hPad(bp)}` }}>
+        <Reveal>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "2px solid #111111", borderBottom: "1px solid var(--border)", padding: "0.625rem 0", marginBottom: bp.isMobile ? "2rem" : "3rem", flexWrap: "wrap", gap: "0.5rem" }}>
+            <Eyebrow label="Our Site Map" />
+            <span style={{ fontFamily: "var(--sans)", fontSize: ".58rem", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--text-dim)", fontWeight: 500 }}>68 Acres · Sector 22D · Yamuna Expressway</span>
+          </div>
+        </Reveal>
+
+        <div style={{ display: "grid", gridTemplateColumns: bp.isDesktop ? "1fr 1.15fr" : "1fr", gap: bp.isDesktop ? "4rem" : "2.5rem", alignItems: "center", opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(28px)", transition: "opacity .9s ease, transform .9s ease" }}>
+          <div style={{ order: bp.isDesktop ? 1 : 2 }}>
+            <h2 style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? "1.75rem" : bp.isMobile ? "2.1rem" : "clamp(2.2rem,3.5vw,3.4rem)", fontWeight: 600, color: "#111111", lineHeight: 1.06, marginBottom: "1.25rem" }}>
+              Thoughtfully<br />Planned. Every<br /><span style={{ color: "#ba2429" }}>Plot Perfected.</span>
+            </h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "1.5rem" }}>
+              <div style={{ width: 36, height: 2, background: "#ba2429", borderRadius: 1 }} />
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ba2429", opacity: 0.5 }} />
+              <div style={{ width: 18, height: 2, background: "#ba2429", borderRadius: 1, opacity: 0.35 }} />
+            </div>
+            <p style={{ fontFamily: "var(--sans)", fontSize: bp.isXs ? ".78rem" : ".84rem", color: "var(--text-muted)", lineHeight: 1.9, marginBottom: "1.75rem" }}>
+              The Ace Estate master plan is engineered for livability — wide roads, open greens, a central clubhouse, and a clear separation between residential, amenity, and buffer zones. Every plot enjoys direct road access and is within walking distance of community facilities.
+            </p>
+            <div style={{ background: "#f8f8f8", border: "1.5px solid rgba(17,17,17,0.08)", borderRadius: 8, padding: bp.isXs ? "1rem" : "1.25rem", marginBottom: "1.75rem" }}>
+              <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", letterSpacing: ".2em", textTransform: "uppercase", color: "#ba2429", fontWeight: 700, marginBottom: ".875rem" }}>Zone Legend</div>
+              <div style={{ display: "grid", gridTemplateColumns: bp.isXs ? "1fr" : "1fr 1fr", gap: ".5rem" }}>
+                {zones.map((z, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: z.color, flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: "var(--sans)", fontSize: ".6rem", fontWeight: 600, color: "#111111", lineHeight: 1.2 }}>{z.label}</div>
+                      <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", color: "var(--text-dim)", lineHeight: 1.3 }}>{z.plots}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <GreenBtn onClick={onEnquire} small>Download Site Plan →</GreenBtn>
+          </div>
+
+          <div style={{ order: bp.isDesktop ? 2 : 1, position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: "0.875rem", opacity: isRevealed ? 0 : 1, transition: "opacity .4s ease", justifyContent: bp.isDesktop ? "flex-end" : "flex-start" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "#fdf0f0", border: "1.5px solid rgba(186,36,41,0.25)", borderRadius: 20, padding: "5px 13px" }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#ba2429", boxShadow: "0 0 0 3px rgba(186,36,41,0.2)", animation: "pulse-ring 2s infinite", flexShrink: 0 }} />
+                <span style={{ fontFamily: "var(--sans)", fontSize: ".55rem", fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#ba2429" }}>
+                  {bp.isMobile ? "Tap to reveal site plan" : "Hover to reveal site plan"}
+                </span>
+              </div>
+            </div>
+
+            <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onTouchStart={() => setTouched(v => !v)}
+              style={{ position: "relative", borderRadius: 10, overflow: "hidden", cursor: "pointer", transition: "box-shadow .6s ease" }}>
+              <img src="/sitemap.jpeg" alt="Ace Estate Site Map"
+                style={{ width: "100%", display: "block", filter: isRevealed ? "blur(0px) brightness(1)" : "blur(14px) brightness(0.7)", transform: isRevealed ? "scale(1)" : "scale(1.06)", transition: "filter .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1)", minHeight: bp.isXs ? 280 : bp.isMobile ? 320 : 480, objectFit: "cover", userSelect: "none", WebkitUserSelect: "none" }}
+              />
+              <div style={{ position: "absolute", inset: 0, background: "rgba(17,17,17,0.45)", opacity: isRevealed ? 0 : 1, transition: "opacity .6s ease", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, opacity: isRevealed ? 0 : 1, transform: isRevealed ? "scale(0.85)" : "scale(1)", transition: "opacity .45s ease, transform .45s ease", pointerEvents: "none" }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? ".9rem" : "1.1rem", fontWeight: 600, color: "#fff", marginBottom: 4 }}>Site Plan</div>
+                  <div style={{ fontFamily: "var(--sans)", fontSize: bp.isXs ? ".56rem" : ".62rem", color: "rgba(255,255,255,0.65)", letterSpacing: ".1em", textTransform: "uppercase", fontWeight: 500 }}>{bp.isMobile ? "Tap to view" : "Hover to view"}</div>
+                </div>
+              </div>
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: bp.isXs ? "1rem 1.25rem" : "1.5rem 1.75rem", background: "linear-gradient(to top, rgba(17,17,17,0.88) 0%, transparent 100%)", opacity: isRevealed ? 1 : 0, transform: isRevealed ? "translateY(0)" : "translateY(10px)", transition: "opacity .5s .1s ease, transform .5s .1s ease", pointerEvents: "none" }}>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                  <div>
+                    <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", fontWeight: 600, marginBottom: 4 }}>Master Layout</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? "1rem" : "1.2rem", fontWeight: 600, color: "#fff" }}>Ace Estate — Sector 22D</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {["68 Acres", "365 Plots", "YEIDA Approved"].map(t => (
+                      <span key={t} style={{ fontFamily: "var(--sans)", fontSize: ".48rem", fontWeight: 600, letterSpacing: ".07em", textTransform: "uppercase", padding: "4px 9px", borderRadius: 3, background: "rgba(186,36,41,0.75)", color: "#fff" }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{ position: "absolute", top: 14, right: 14, background: isRevealed ? "rgba(255,250,250,0.93)" : "rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", border: `1.5px solid ${isRevealed ? "rgba(186,36,41,0.3)" : "rgba(255,255,255,0.2)"}`, borderRadius: 6, padding: "6px 11px", transition: "all .5s ease", pointerEvents: "none" }}>
+                <div style={{ fontFamily: "var(--sans)", fontSize: ".46rem", letterSpacing: ".16em", textTransform: "uppercase", color: isRevealed ? "var(--text-dim)" : "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: 2 }}>Total Area</div>
+                <div style={{ fontFamily: "var(--display)", fontStyle: "italic", fontSize: "1.2rem", fontWeight: 700, color: isRevealed ? "#ba2429" : "#fff", lineHeight: 1 }}>68 Acres</div>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 3, marginTop: 3, opacity: vis ? 1 : 0, transition: "opacity .7s .3s ease" }}>
+              {[{ val: "365", label: "Total Plots" }, { val: "80%", label: "Open Space" }, { val: "24m", label: "Max Road Width" }].map((s, i) => (
+                <div key={i} style={{ background: i === 0 ? "#111111" : i === 1 ? "#fdf0f0" : "#f0f0f0", border: "1.5px solid var(--border)", borderRadius: 6, padding: bp.isXs ? ".875rem" : "1rem 1.25rem", textAlign: "center" }}>
+                  <div style={{ fontFamily: "var(--display)", fontStyle: "italic", fontSize: bp.isXs ? "1.4rem" : "1.7rem", fontWeight: 700, color: i === 0 ? "#fff" : "#ba2429", lineHeight: 1, marginBottom: 3 }}>{s.val}</div>
+                  <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", color: i === 0 ? "rgba(255,255,255,0.55)" : "var(--text-dim)" }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -1196,8 +1366,7 @@ function Footer() {
             </p>
             <div style={{ display: "flex", gap: 7 }}>
               {["Fb", "Tw", "In", "Li"].map(s => (
-                <a key={s} href="#"
-                  style={{ width: 30, height: 30, border: "2px solid rgba(255,255,255,0.1)", borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--sans)", fontSize: ".56rem", fontWeight: 600, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>{s}</a>
+                <a key={s} href="#" style={{ width: 30, height: 30, border: "2px solid rgba(255,255,255,0.1)", borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--sans)", fontSize: ".56rem", fontWeight: 600, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>{s}</a>
               ))}
             </div>
           </div>
@@ -1243,10 +1412,11 @@ function Disclaimer() {
 }
 
 /* ══════════════════════════════════════════════════════
-   MODALS
+   MODAL
 ══════════════════════════════════════════════════════ */
 function Modal({ open, onClose }) {
   const bp = useBreakpoint();
+  const modalForm = useLeadForm("modal");
   if (!open) return null;
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(17,17,17,0.7)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", padding: bp.isXs ? "0.75rem" : "1rem", animation: "fadeIn .25s ease" }}>
@@ -1262,24 +1432,41 @@ function Modal({ open, onClose }) {
             </div>
             <button onClick={onClose} style={{ background: "var(--off-white)", border: "none", width: 32, height: 32, borderRadius: "50%", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#111111", flexShrink: 0, marginLeft: 10 }}>×</button>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-            {["Full Name", "Phone Number", "Email Address"].map(ph => (
-              <div key={ph}>
-                <label style={{ display: "block", fontFamily: "var(--sans)", fontSize: ".54rem", letterSpacing: ".14em", textTransform: "uppercase", color: "#111111", fontWeight: 700, marginBottom: 5 }}>{ph}</label>
-                <input placeholder={`Enter your ${ph.toLowerCase()}`}
-                  style={{ width: "100%", background: "var(--off-white)", border: "2px solid var(--border)", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".82rem", fontWeight: 500, padding: "10px 13px", borderRadius: 6 }} />
-              </div>
-            ))}
-            <GreenBtn onClick={onClose} fullWidth>Submit Enquiry</GreenBtn>
-          </div>
+
+          {modalForm.status === "success" ? <SuccessMsg /> : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+              {[
+                { key: "name", label: "Full Name", ph: "Enter your full name" },
+                { key: "phone", label: "Phone Number", ph: "Enter your phone number" },
+                { key: "email", label: "Email Address", ph: "Enter your email address" },
+              ].map(f => (
+                <div key={f.key}>
+                  <label style={{ display: "block", fontFamily: "var(--sans)", fontSize: ".54rem", letterSpacing: ".14em", textTransform: "uppercase", color: "#111111", fontWeight: 700, marginBottom: 5 }}>{f.label}</label>
+                  <input
+                    value={modalForm.fields[f.key]}
+                    onChange={modalForm.set(f.key)}
+                    placeholder={f.ph}
+                    style={{ width: "100%", background: "var(--off-white)", border: "2px solid var(--border)", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".82rem", fontWeight: 500, padding: "10px 13px", borderRadius: 6 }}
+                  />
+                </div>
+              ))}
+              <GreenBtn onClick={modalForm.submit} fullWidth disabled={modalForm.status === "loading"}>
+                {modalForm.status === "loading" ? "Registering…" : "Submit Enquiry"}
+              </GreenBtn>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
+/* ══════════════════════════════════════════════════════
+   AUTO POPUP
+══════════════════════════════════════════════════════ */
 function AutoPopup({ open, onClose }) {
   const bp = useBreakpoint();
+  const popupForm = useLeadForm("auto-popup");
   if (!open) return null;
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(17,17,17,0.65)", backdropFilter: "blur(16px)", display: "flex", alignItems: "center", justifyContent: "center", padding: bp.isXs ? ".75rem" : "1rem", animation: "fadeIn .5s ease" }}>
@@ -1304,16 +1491,30 @@ function AutoPopup({ open, onClose }) {
           <p style={{ fontFamily: "var(--sans)", fontSize: ".76rem", color: "var(--text-muted)", lineHeight: 1.8, marginBottom: "1.5rem" }}>
             Be first to receive plot availability, pricing and site visit invitations for Ace Estate Residential Plots, Sector 22D. Starting from ₹1 Lakh per Gaj*.
           </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
-            {["Full Name", "Phone Number"].map(ph => (
-              <div key={ph}>
-                <label style={{ display: "block", fontFamily: "var(--sans)", fontSize: ".54rem", letterSpacing: ".14em", textTransform: "uppercase", color: "#111111", fontWeight: 700, marginBottom: 5 }}>{ph}</label>
-                <input placeholder={`Enter ${ph.toLowerCase()}`}
-                  style={{ width: "100%", background: "var(--off-white)", border: "2px solid var(--border)", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".82rem", fontWeight: 500, padding: "10px 13px", borderRadius: 6 }} />
+
+          {popupForm.status === "success" ? <SuccessMsg /> : (
+            <>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
+                {[
+                  { key: "name", label: "Full Name", ph: "Enter full name" },
+                  { key: "phone", label: "Phone Number", ph: "Enter phone number" },
+                ].map(f => (
+                  <div key={f.key}>
+                    <label style={{ display: "block", fontFamily: "var(--sans)", fontSize: ".54rem", letterSpacing: ".14em", textTransform: "uppercase", color: "#111111", fontWeight: 700, marginBottom: 5 }}>{f.label}</label>
+                    <input
+                      value={popupForm.fields[f.key]}
+                      onChange={popupForm.set(f.key)}
+                      placeholder={`Enter ${f.label.toLowerCase()}`}
+                      style={{ width: "100%", background: "var(--off-white)", border: "2px solid var(--border)", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".82rem", fontWeight: 500, padding: "10px 13px", borderRadius: 6 }}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <GreenBtn fullWidth>Get Early Access</GreenBtn>
+              <GreenBtn onClick={popupForm.submit} fullWidth disabled={popupForm.status === "loading"}>
+                {popupForm.status === "loading" ? "Registering…" : "Get Early Access"}
+              </GreenBtn>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1321,7 +1522,7 @@ function AutoPopup({ open, onClose }) {
 }
 
 /* ══════════════════════════════════════════════════════
-   STICKY BOTTOM BAR (mobile)
+   STICKY BOTTOM CTA (mobile)
 ══════════════════════════════════════════════════════ */
 function StickyBottomCTA({ onEnquire }) {
   const bp = useBreakpoint();
@@ -1346,10 +1547,11 @@ function StickyBottomCTA({ onEnquire }) {
 }
 
 /* ══════════════════════════════════════════════════════
-   SIDEBAR (wide screens only)
+   SIDEBAR
 ══════════════════════════════════════════════════════ */
 function Sidebar({ onEnquire }) {
   const bp = useBreakpoint();
+  const sidebarForm = useLeadForm("sidebar");
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 60);
@@ -1361,8 +1563,7 @@ function Sidebar({ onEnquire }) {
 
   return (
     <div style={{
-      position: "sticky",
-      top: navH,
+      position: "sticky", top: navH,
       maxHeight: `calc(100vh - ${navH}px)`,
       overflowY: "auto",
       padding: "1.75rem 1.5rem",
@@ -1378,16 +1579,32 @@ function Sidebar({ onEnquire }) {
         <div style={{ fontFamily: "var(--sans)", fontSize: ".62rem", color: "var(--text-dim)", marginTop: 5, fontWeight: 500, lineHeight: 1.5 }}>Sector 22D, Yamuna Expressway, Greater Noida</div>
         <div style={{ fontFamily: "var(--sans)", fontSize: ".6rem", color: "#ba2429", marginTop: 4, fontWeight: 600 }}>From ₹1 Lakh/Gaj*</div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.25rem" }}>
-        {["Full Name", "Email", "Phone"].map(ph => (
-          <div key={ph}>
-            <label style={{ display: "block", fontFamily: "var(--sans)", fontSize: ".52rem", letterSpacing: ".14em", textTransform: "uppercase", color: "#111111", fontWeight: 700, marginBottom: 5 }}>{ph}</label>
-            <input placeholder={`Enter ${ph}`}
-              style={{ width: "100%", background: "var(--off-white)", border: "2px solid var(--border)", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".78rem", fontWeight: 500, padding: "8px 11px", borderRadius: 5 }} />
+
+      {sidebarForm.status === "success" ? <SuccessMsg /> : (
+        <>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.25rem" }}>
+            {[
+              { key: "name", label: "Full Name", ph: "Enter Full Name" },
+              { key: "email", label: "Email", ph: "Enter Email" },
+              { key: "phone", label: "Phone", ph: "Enter Phone" },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ display: "block", fontFamily: "var(--sans)", fontSize: ".52rem", letterSpacing: ".14em", textTransform: "uppercase", color: "#111111", fontWeight: 700, marginBottom: 5 }}>{f.label}</label>
+                <input
+                  value={sidebarForm.fields[f.key]}
+                  onChange={sidebarForm.set(f.key)}
+                  placeholder={f.ph}
+                  style={{ width: "100%", background: "var(--off-white)", border: "2px solid var(--border)", outline: "none", color: "#111111", fontFamily: "var(--sans)", fontSize: ".78rem", fontWeight: 500, padding: "8px 11px", borderRadius: 5 }}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      <GreenBtn onClick={onEnquire} fullWidth>Request Callback</GreenBtn>
+          <GreenBtn onClick={sidebarForm.submit} fullWidth disabled={sidebarForm.status === "loading"}>
+            {sidebarForm.status === "loading" ? "Registering…" : "Request Callback"}
+          </GreenBtn>
+        </>
+      )}
+
       <div style={{ borderTop: "2px solid var(--border)", paddingTop: "1.25rem", marginTop: "1.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 36, height: 36, background: "#111111", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".9rem", flexShrink: 0 }}>📞</div>
@@ -1398,300 +1615,6 @@ function Sidebar({ onEnquire }) {
         </div>
       </div>
     </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════
-   SITE MAP SECTION
-══════════════════════════════════════════════════════ */
-function SiteMapSection({ onEnquire }) {
-  const bp = useBreakpoint();
-  const [hovered, setHovered] = useState(false);
-  const [touched, setTouched] = useState(false);
-  const ref = useRef(null);
-  const [vis, setVis] = useState(false);
-
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold: 0.06 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-
-  const isRevealed = hovered || touched;
-
-  const highlights = [
-    { icon: "🛣️", label: "Wide Internal Roads", desc: "9m to 24m asphalted roads with pedestrian walkways" },
-    { icon: "🌳", label: "Central Green Park", desc: "Landscaped central park at the heart of the township" },
-    { icon: "🏊", label: "Clubhouse & Pool", desc: "Dedicated recreation zone with clubhouse and amenities" },
-    { icon: "🔒", label: "Gated Perimeter", desc: "Fully secured boundary with boom-barrier entry/exit" },
-    { icon: "💡", label: "Underground Utilities", desc: "All services laid underground for a clean streetscape" },
-    { icon: "🏡", label: "365 Exclusive Plots", desc: "Plotted layouts from 150–500 sq.yd across 68 acres" },
-  ];
-
-  const zones = [
-    { label: "Residential Zone A", color: "#ba2429", plots: "120 Plots · 150–200 sq.yd" },
-    { label: "Residential Zone B", color: "#c94040", plots: "95 Plots · 200–300 sq.yd" },
-    { label: "Premium Zone", color: "#111111", plots: "80 Plots · 300–500 sq.yd" },
-    { label: "Amenity Zone", color: "#555555", plots: "Clubhouse · Pool · Park" },
-    { label: "Green Buffer", color: "#7a9e7e", plots: "80% Open Landscape" },
-    { label: "Entry / Roads", color: "#aaaaaa", plots: "9m–24m Wide Roads" },
-  ];
-
-  return (
-    <section
-      id="sitemap"
-      ref={ref}
-      style={{ padding: `${vPad(bp)} 0`, background: "#fff", overflow: "hidden" }}
-    >
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: `0 ${hPad(bp)}` }}>
-
-        {/* Section header */}
-        <Reveal>
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            borderTop: "2px solid #111111", borderBottom: "1px solid var(--border)",
-            padding: "0.625rem 0", marginBottom: bp.isMobile ? "2rem" : "3rem",
-            flexWrap: "wrap", gap: "0.5rem"
-          }}>
-            <Eyebrow label="Our Site Map" />
-            <span style={{ fontFamily: "var(--sans)", fontSize: ".58rem", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--text-dim)", fontWeight: 500 }}>
-              68 Acres · Sector 22D · Yamuna Expressway
-            </span>
-          </div>
-        </Reveal>
-
-        {/* Main two-column layout */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: bp.isDesktop ? "1fr 1.15fr" : "1fr",
-          gap: bp.isDesktop ? "4rem" : "2.5rem",
-          alignItems: "center",
-          opacity: vis ? 1 : 0,
-          transform: vis ? "none" : "translateY(28px)",
-          transition: "opacity .9s ease, transform .9s ease",
-        }}>
-
-          {/* ── LEFT: Text Content ── */}
-          <div style={{ order: bp.isDesktop ? 1 : 2 }}>
-            <h2 style={{
-              fontFamily: "var(--serif)",
-              fontSize: bp.isXs ? "1.75rem" : bp.isMobile ? "2.1rem" : "clamp(2.2rem,3.5vw,3.4rem)",
-              fontWeight: 600, color: "#111111", lineHeight: 1.06,
-              marginBottom: "1.25rem",
-            }}>
-              Thoughtfully<br />Planned. Every<br />
-              <span style={{ color: "#ba2429" }}>Plot Perfected.</span>
-            </h2>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "1.5rem" }}>
-              <div style={{ width: 36, height: 2, background: "#ba2429", borderRadius: 1 }} />
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ba2429", opacity: 0.5 }} />
-              <div style={{ width: 18, height: 2, background: "#ba2429", borderRadius: 1, opacity: 0.35 }} />
-            </div>
-
-            <p style={{
-              fontFamily: "var(--sans)",
-              fontSize: bp.isXs ? ".78rem" : ".84rem",
-              color: "var(--text-muted)", lineHeight: 1.9,
-              marginBottom: "1.75rem",
-            }}>
-              The Ace Estate master plan is engineered for livability — wide roads, open greens, a central clubhouse, and a clear separation between residential, amenity, and buffer zones. Every plot enjoys direct road access and is within walking distance of community facilities.
-            </p>
-
-      
-
-            {/* Legend */}
-            <div style={{
-              background: "#f8f8f8",
-              border: "1.5px solid rgba(17,17,17,0.08)",
-              borderRadius: 8,
-              padding: bp.isXs ? "1rem" : "1.25rem",
-              marginBottom: "1.75rem",
-            }}>
-              <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", letterSpacing: ".2em", textTransform: "uppercase", color: "#ba2429", fontWeight: 700, marginBottom: ".875rem" }}>Zone Legend</div>
-              <div style={{ display: "grid", gridTemplateColumns: bp.isXs ? "1fr" : "1fr 1fr", gap: ".5rem" }}>
-                {zones.map((z, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 12, height: 12, borderRadius: 3, background: z.color, flexShrink: 0 }} />
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontFamily: "var(--sans)", fontSize: ".6rem", fontWeight: 600, color: "#111111", lineHeight: 1.2 }}>{z.label}</div>
-                      <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", color: "var(--text-dim)", lineHeight: 1.3 }}>{z.plots}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <GreenBtn onClick={onEnquire} small>Download Site Plan →</GreenBtn>
-          </div>
-
-          {/* ── RIGHT: Blurred Image with Hover Reveal ── */}
-          <div style={{ order: bp.isDesktop ? 2 : 1, position: "relative" }}>
-
-            {/* Hover instruction badge */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: 7,
-              marginBottom: "0.875rem",
-              opacity: isRevealed ? 0 : 1,
-              transition: "opacity .4s ease",
-              justifyContent: bp.isDesktop ? "flex-end" : "flex-start",
-            }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 7,
-                background: "#fdf0f0",
-                border: "1.5px solid rgba(186,36,41,0.25)",
-                borderRadius: 20, padding: "5px 13px",
-              }}>
-                <div style={{
-                  width: 7, height: 7, borderRadius: "50%",
-                  background: "#ba2429",
-                  boxShadow: "0 0 0 3px rgba(186,36,41,0.2)",
-                  animation: "pulse-ring 2s infinite",
-                  flexShrink: 0,
-                }} />
-                <span style={{ fontFamily: "var(--sans)", fontSize: ".55rem", fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#ba2429" }}>
-                  {bp.isMobile ? "Tap to reveal site plan" : "Hover to reveal site plan"}
-                </span>
-              </div>
-            </div>
-
-            {/* Image container */}
-            <div
-              onMouseEnter={() => setHovered(true)}
-              onMouseLeave={() => setHovered(false)}
-              onTouchStart={() => setTouched(v => !v)}
-              style={{
-                position: "relative",
-                borderRadius: 10,
-                overflow: "hidden",
-                cursor: "pointer",
-             
-                transition: "box-shadow .6s ease",
-                // border: `2px solid ${isRevealed ? "rgba(186,36,41,0.35)" : "rgba(17,17,17,0.1)"}`,
-              }}
-            >
-              {/* The actual site map image */}
-              <img
-                src="/sitemap.jpeg"
-                alt="Ace Estate Site Map"
-                style={{
-                  width: "100%",
-                  display: "block",
-                  filter: isRevealed ? "blur(0px) brightness(1)" : "blur(14px) brightness(0.7)",
-                  transform: isRevealed ? "scale(1)" : "scale(1.06)",
-                  transition: "filter .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1)",
-                  minHeight: bp.isXs ? 280 : bp.isMobile ? 320 : 480,
-                  objectFit: "cover",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
-                }}
-              />
-
-              {/* Blur overlay — fades out on hover */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "rgba(17,17,17,0.45)",
-                backdropFilter: isRevealed ? "blur(0px)" : "blur(0px)",
-                opacity: isRevealed ? 0 : 1,
-                transition: "opacity .6s ease",
-                pointerEvents: "none",
-              }} />
-
-              {/* Centered "locked" icon — visible when blurred */}
-              <div style={{
-                position: "absolute", inset: 0,
-                display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-                gap: 12,
-                opacity: isRevealed ? 0 : 1,
-                transform: isRevealed ? "scale(0.85)" : "scale(1)",
-                transition: "opacity .45s ease, transform .45s ease",
-                pointerEvents: "none",
-              }}>
-                
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? ".9rem" : "1.1rem", fontWeight: 600, color: "#fff", marginBottom: 4 }}>Site Plan</div>
-                  <div style={{ fontFamily: "var(--sans)", fontSize: bp.isXs ? ".56rem" : ".62rem", color: "rgba(255,255,255,0.65)", letterSpacing: ".1em", textTransform: "uppercase", fontWeight: 500 }}>
-                    {bp.isMobile ? "Tap to view" : "Hover to view"}
-                  </div>
-                </div>
-              </div>
-
-              {/* Revealed overlay — label shown when image is visible */}
-              <div style={{
-                position: "absolute", bottom: 0, left: 0, right: 0,
-                padding: bp.isXs ? "1rem 1.25rem" : "1.5rem 1.75rem",
-                background: "linear-gradient(to top, rgba(17,17,17,0.88) 0%, transparent 100%)",
-                opacity: isRevealed ? 1 : 0,
-                transform: isRevealed ? "translateY(0)" : "translateY(10px)",
-                transition: "opacity .5s .1s ease, transform .5s .1s ease",
-                pointerEvents: "none",
-              }}>
-                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                  <div>
-                    <div style={{ fontFamily: "var(--sans)", fontSize: ".52rem", letterSpacing: ".18em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", fontWeight: 600, marginBottom: 4 }}>Master Layout</div>
-                    <div style={{ fontFamily: "var(--serif)", fontSize: bp.isXs ? "1rem" : "1.2rem", fontWeight: 600, color: "#fff" }}>Ace Estate — Sector 22D</div>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    {["68 Acres", "365 Plots", "YEIDA Approved"].map(t => (
-                      <span key={t} style={{
-                        fontFamily: "var(--sans)", fontSize: ".48rem", fontWeight: 600,
-                        letterSpacing: ".07em", textTransform: "uppercase",
-                        padding: "4px 9px", borderRadius: 3,
-                        background: "rgba(186,36,41,0.75)",
-                        color: "#fff",
-                      }}>{t}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Corner accent — top-right */}
-              <div style={{
-                position: "absolute", top: 14, right: 14,
-                background: isRevealed ? "rgba(255,250,250,0.93)" : "rgba(255,255,255,0.12)",
-                backdropFilter: "blur(10px)",
-                border: `1.5px solid ${isRevealed ? "rgba(186,36,41,0.3)" : "rgba(255,255,255,0.2)"}`,
-                borderRadius: 6, padding: "6px 11px",
-                transition: "all .5s ease",
-                pointerEvents: "none",
-              }}>
-                <div style={{ fontFamily: "var(--sans)", fontSize: ".46rem", letterSpacing: ".16em", textTransform: "uppercase", color: isRevealed ? "var(--text-dim)" : "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: 2 }}>Total Area</div>
-                <div style={{ fontFamily: "var(--display)", fontStyle: "italic", fontSize: "1.2rem", fontWeight: 700, color: isRevealed ? "#ba2429" : "#fff", lineHeight: 1 }}>68 Acres</div>
-              </div>
-            </div>
-
-            {/* Below image — stat strip */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 3,
-              marginTop: 3,
-              opacity: vis ? 1 : 0,
-              transition: "opacity .7s .3s ease",
-            }}>
-              {[
-                { val: "365", label: "Total Plots" },
-                { val: "80%", label: "Open Space" },
-                { val: "24m", label: "Max Road Width" },
-              ].map((s, i) => (
-                <div key={i} style={{
-                  background: i === 0 ? "#111111" : i === 1 ? "#fdf0f0" : "#f0f0f0",
-                  border: "1.5px solid var(--border)",
-                  borderRadius: 6,
-                  padding: bp.isXs ? ".875rem" : "1rem 1.25rem",
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontFamily: "var(--display)", fontStyle: "italic", fontSize: bp.isXs ? "1.4rem" : "1.7rem", fontWeight: 700, color: i === 0 ? "#fff" : "#ba2429", lineHeight: 1, marginBottom: 3 }}>{s.val}</div>
-                  <div style={{ fontFamily: "var(--sans)", fontSize: ".5rem", fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", color: i === 0 ? "rgba(255,255,255,0.55)" : "var(--text-dim)" }}>{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -1732,7 +1655,7 @@ export default function App() {
           <LocationAdvantageSection onEnquire={openModal} />
           <LocationSection />
           <SiteMapSection onEnquire={openModal} />
-          <ContactSection onEnquire={openModal} />
+          <ContactSection />
         </div>
         {bp.isWide && <Sidebar onEnquire={openModal} />}
       </div>
